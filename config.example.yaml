@@ -1,0 +1,71 @@
+# BXBot 配置模板 —— 复制为 config.yaml 后修改
+# 机密（API Key 等）放 .env，此处用 ${ENV_VAR} 占位
+
+# 目标推特账号
+target:
+  handle: "example_user"        # 不带 @
+
+# 推文获取（免费逆向/公共接口，不使用付费 API）
+twitter:
+  # 降级链顺序：x_ssr(页面直出，免登录) -> twikit(逆向接口，需cookie) -> fxtwitter(仅单条)
+  backend_order: ["x_ssr", "twikit", "fxtwitter"]
+  proxy: ""                     # 访问 X 不稳定时填 socks5://127.0.0.1:7890 或 http://...
+  page_size: 20                 # 每轮拉取条数上限
+
+# LLM 翻译 + 内容过滤（OpenAI 兼容接口，DeepSeek/GLM/Ollama 均可）
+llm:
+  base_url: "https://token-plan-cn.xiaomimimo.com/v1"
+  api_key: "${LLM_API_KEY}"
+  model: "mimo-v2.6-flash"
+  temperature: 0.2
+  timeout_s: 60
+  max_retries: 3
+  json_mode: "auto"             # auto | on | off（auto=失败自动去掉 json 约束重试）
+  on_failure: "skip"            # skip=本轮跳过等下轮 | post_original=直接发原文
+  prompt_file: ""               # 可选：自定义 system prompt 覆盖内置
+
+# 过滤规则链
+filter:
+  skip_retweets: false          # 过滤转推（LLM 敏感判断已默认开启，其余为可选开关）
+  skip_replies: false
+  skip_quotes: false
+  keyword_blacklist: []         # 例: ["抽奖", "转发关注"]，支持正则（以 re: 开头）
+  llm_enabled: true             # LLM 敏感/广告/NSFW 判断（核心过滤）
+  max_images: 9                 # B 站图文动态上限（超出取前 N）
+  max_video_mb: 512
+  max_video_s: 1800
+
+# 发布格式
+translate:
+  mode: "translated_only"       # both=译文+原文 | translated_only（仅译文，不附原推）| original_only
+  always_include_source_link: true
+
+# B 站发布
+bilibili:
+  dry_run: false                # true 时只打印不发布（也可用 CLI --dry-run）
+  proxy: ""                     # B 站一般直连，留空
+  tid: 21                       # 视频分区 tid（21=生活·日常，可按账号定位改）
+  tags: ["推特搬运", "资讯"]     # 视频默认标签（与 LLM 生成的合并去重）
+  copyright: 2                  # 2=转载（搬运必选）
+  desc_max_len: 2000            # 动态/简介字数上限
+  publish_gap_seconds: 60       # 相邻两条发布的间隔（防风控）
+  max_publish_per_round: 5      # 单轮最多发布条数
+  risk_cooldown_s: 1800         # 连续风控后的熔断时长
+  aigc_flag: 0                  # 动态 AIGC 声明：0=非AI 1=AI生成 2=AI辅助（LLM 翻译可考虑选 2）
+  # 风控参数透传（可选）：动态发布被 -403 拦截时，从浏览器抓包复制以下值填入
+  risk_params: {}
+  #  risk_params:
+  #    b_wet: "{加密数据}.{签名}.v1"
+  #    dm_img_list: "[]"
+  #    dm_img_str: "..."
+  #    dm_cover_img_str: "..."
+  #    dm_img_inter: "{}"
+
+# 轮询调度
+poll:
+  interval_seconds: 600         # 轮询间隔（±10% 抖动）
+  max_attempts: 3               # 单条推文最大处理次数
+
+# 运行目录（相对项目根）
+paths:
+  data_dir: "data"

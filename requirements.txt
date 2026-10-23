@@ -1,0 +1,12 @@
+# BXBot 依赖（关键库钉死版本：B站库上游已归档，必须锁定）
+bilibili-api-python==17.4.2
+twikit==2.3.3
+httpx[socks]>=0.27
+pydantic>=2.7
+pydantic-settings>=2.2
+PyYAML>=6.0
+loguru>=0.7
+tenacity>=8.2
+python-dotenv>=1.0
+qrcode>=7.4
+Pillow>=10.0
